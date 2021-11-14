@@ -2,6 +2,18 @@
 	display: flex;
 }
 
-.grid-pen {
-	cursor: url(../assets/pen.png), auto;
+.grid-pencil {
+	cursor: url(../assets/pencil.png), auto;
+}
+
+.grid-eraser {
+	cursor: url(../assets/eraser.png), auto;
+}
+
+.grid-block {
+	cursor: not-allowed;
+}
+
+.grid-progress {
+	cursor: progress;
 }

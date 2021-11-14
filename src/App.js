@@ -3,7 +3,7 @@ import PathFinder from './pages/PathFinder';
 
 function App() {
 	return (
-		<div className="App">
+		<div className="app">
 			<PathFinder />
 		</div>
 	);

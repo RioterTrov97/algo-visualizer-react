@@ -67,6 +67,7 @@ const PathFindingVisualizer = () => {
 	}, [state.resetGraph]);
 
 	const handleUpdateStateWithWalls = (row, col, mouseIsPressed) => {
+		if (state.isInAnimationFinishedState || state.isAnimating) return;
 		const newGrid = getNewGridWithWallToggled(state.grid, row, col, isPencil);
 		setState((prevState) => ({ ...prevState, grid: newGrid, mouseIsPressed }));
 	};
@@ -151,9 +152,9 @@ const PathFindingVisualizer = () => {
 	};
 
 	return (
-		<Flex direction="column">
+		<Flex direction="column" justify="center" w={'100%'}>
 			<Heading mx="auto" mt={10} size="lg">
-				This is Dijsktra Algorithm Visualizer
+				Dijsktra Algorithm Visualizer
 			</Heading>
 			<Flex
 				my={5}
@@ -179,9 +180,8 @@ const PathFindingVisualizer = () => {
 				<Center>
 					<Flex
 						background="blue.50"
-						px={4}
 						py={3}
-						ml={5}
+						px={5}
 						rounded={5}
 						direction="column"
 						w="max-content">
@@ -241,7 +241,7 @@ const PathFindingVisualizer = () => {
 				</Center>
 			</Flex>
 
-			<Flex mx="auto" mb={5} w="max-content">
+			<Flex mx="auto" mb={5} maxWidth={'80%'}>
 				<Alert
 					rounded={5}
 					status={
@@ -264,9 +264,13 @@ const PathFindingVisualizer = () => {
 						<div
 							key={rowIdx}
 							className={`grid-row ${
-								state.mouseIsPressed || !state.isInAnimationFinishedState
-									? 'grid-pen'
-									: ''
+								state.isAnimating
+									? 'grid-progress'
+									: state.isInAnimationFinishedState
+									? 'grid-block'
+									: isPencil
+									? 'grid-pencil'
+									: 'grid-eraser'
 							}`}>
 							{row.map((node, nodeIdx) => {
 								const { row, col, isFinish, isStart, className } = node;
@@ -292,7 +296,7 @@ const PathFindingVisualizer = () => {
 				<Heading size="lg" mb={5} mx="auto">
 					Legends
 				</Heading>
-				<Flex wrap="wrap">
+				<Flex justify="center" wrap="wrap">
 					<LegendItem title="Unvisited Node" className="node" />
 					<LegendItem title="Visited Node" className="node node-visited" />
 					<LegendItem title="Wall" className="node node-wall" />
@@ -312,7 +316,7 @@ export default PathFindingVisualizer;
 
 const LegendItem = ({ title, className }) => {
 	return (
-		<Flex mx={2} direction="column" alignItems="center">
+		<Flex mx={2} mb={2} direction="column" alignItems="center">
 			<Text>{title}</Text>
 			<Flex className={className}></Flex>
 		</Flex>
