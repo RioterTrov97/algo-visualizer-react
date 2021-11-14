@@ -154,30 +154,29 @@ const PathFindingVisualizer = () => {
 	return (
 		<Flex direction="column" justify="center" w={'100%'}>
 			<Heading mx="auto" mt={10} size="lg">
-				Dijsktra Algorithm Visualizer
+				Dijsktra Algo Visualizer
 			</Heading>
 			<Flex
 				my={5}
 				mx="auto"
 				direction={['column', 'row']}
-				alignItems={['center']}>
+				alignItems={'center'}>
 				<Flex mx="auto" mb={5}>
 					<Button
 						colorScheme="teal"
 						disabled={state.isAnimating || state.isInAnimationFinishedState}
 						onClick={handleVisualizeDijkstraAlgorithm}
-						mx={5}>
-						Visualize Dijkstra's Algorithm
+						mr={5}>
+						Visualize!
 					</Button>
 					<Button
 						colorScheme="red"
-						mx={5}
 						disabled={state.isAnimating}
 						onClick={() => setState(INITIAL_STATE)}>
 						Reset board
 					</Button>
 				</Flex>
-				<Center>
+				<Center wrap="wrap" maxWidth="90vw">
 					<Flex
 						background="blue.50"
 						py={3}
@@ -185,12 +184,12 @@ const PathFindingVisualizer = () => {
 						rounded={5}
 						direction="column"
 						w="max-content">
-						<Heading as="h4" size="sm" mr={5}>
-							Set Animation Speed
+						<Heading as="h4" size="sm" mr={[2, 5]}>
+							Animation Speed
 						</Heading>
 						<Flex mt={3}>
 							<Slider
-								maxWidth={'140px'}
+								maxWidth={['100px', '140px']}
 								aria-label="slider"
 								min={1}
 								max={10}
@@ -251,10 +250,10 @@ const PathFindingVisualizer = () => {
 					}>
 					<AlertIcon />
 					{!state.isAnimating && !state.isInAnimationFinishedState
-						? 'Draw some walls using pencil and Click on visualize Dijkstra Algorith to begin'
+						? 'Draw some walls using pencil and Click on Visualize button to begin!'
 						: state.isAnimating && !state.isInAnimationFinishedState
-						? 'Please wait for the algorithm to finish'
-						: 'Please reset board to view again'}
+						? 'Please wait for the algorithm to finish!'
+						: 'Please reset board to view again!'}
 				</Alert>
 			</Flex>
 
@@ -292,7 +291,7 @@ const PathFindingVisualizer = () => {
 					);
 				})}
 			</Flex>
-			<Flex mx="auto" direction="column" my={5} py={3}>
+			<Flex mx="auto" direction="column" maxWidth="80%" my={3}>
 				<Heading size="lg" mb={5} mx="auto">
 					Legends
 				</Heading>
