@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Node } from '../components/Node';
 import { dijkstra, getNodesInShortestPathOrder } from '../utils/dijkstra';
 import {
@@ -21,20 +21,12 @@ import {
 	IconButton,
 	Icon,
 	Center,
+	Select,
 } from '@chakra-ui/react';
 import { ImPencil2 } from 'react-icons/im';
 import { FaEraser } from 'react-icons/fa';
-
-const INITIAL_STATE = {
-	grid: [],
-	startNode: {},
-	finishNode: {},
-	animationSpeed: 10,
-	mouseIsPressed: false,
-	resetGraph: true,
-	isAnimating: false,
-	isInAnimationFinishedState: false,
-};
+import { recursiveDivisionMaze } from '../utils/maze-generation/recursive-division';
+import lodash from 'lodash';
 
 const width =
 	window.innerWidth ||
@@ -45,29 +37,49 @@ const height =
 	document.documentElement.clientHeight ||
 	document.body.clientHeight;
 
+const numRows = Math.floor(height / 60);
+const numColumns = Math.floor(width / 35);
+const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
+
+const INITIAL_STATE = {
+	grid,
+	startNode,
+	finishNode,
+	animationSpeed: 10,
+	mouseIsPressed: false,
+	resetGraph: false,
+	resetGraphType: null,
+	isAnimating: false,
+	isPathAnimationFinished: false,
+	isMazeAnimationFinished: false,
+	usedPathAlgo: 'djikstra',
+	numRows,
+	numColumns,
+};
+
+const getInitialState = () => lodash.cloneDeep(INITIAL_STATE);
+
 const PathFindingVisualizer = () => {
-	const [state, setState] = useState(INITIAL_STATE);
+	const [state, setState] = useState(getInitialState());
 	const [isPencil, setIsPencil] = useState(true);
+	const resetAndAnimateType = useRef(null);
 	const animationSpeed = 11 - state.animationSpeed;
 
 	useEffect(() => {
 		if (state.resetGraph) {
-			const numRows = Math.floor(height / 65);
-			const numColumns = Math.floor(width / 42);
-
-			const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
-			setState((prevState) => ({
-				...prevState,
-				grid,
-				startNode,
-				finishNode,
-				resetGraph: false,
-			}));
+			if (resetAndAnimateType.current === 'djikstra') {
+				handleDijkstraAlgo();
+			} else if (resetAndAnimateType.current === 'recursive-maze') {
+				handleRecursiveMazeAlgo();
+			}
+			setState((prevState) => ({ ...prevState, resetGraph: false }));
 		}
+
+		//eslint-disable-next-line
 	}, [state.resetGraph]);
 
 	const handleUpdateStateWithWalls = (row, col, mouseIsPressed) => {
-		if (state.isInAnimationFinishedState || state.isAnimating) return;
+		if (state.isAnimating) return;
 		const newGrid = getNewGridWithWallToggled(state.grid, row, col, isPencil);
 		setState((prevState) => ({ ...prevState, grid: newGrid, mouseIsPressed }));
 	};
@@ -108,11 +120,12 @@ const PathFindingVisualizer = () => {
 					setState((prevState) => ({
 						...prevState,
 						isAnimating: false,
-						isInAnimationFinishedState: true,
+						isPathAnimationFinished: true,
 					}));
 				}
 			}, 10 * animationSpeed * i);
 		}
+		resetAndAnimateType.current = null;
 	};
 
 	const animateShortestPath = (nodesInShortestPathOrder) => {
@@ -140,46 +153,134 @@ const PathFindingVisualizer = () => {
 		animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
 	};
 
-	const handleVisualizeDijkstraAlgorithm = () => {
+	const handleDijkstraAlgo = () => {
 		if (!state.isAnimating) {
-			if (state.isInAnimationFinishedState) {
-				setState(INITIAL_STATE);
+			if (state.isPathAnimationFinished) {
+				resetAndAnimateType.current = 'djikstra';
+				setState({ ...getInitialState(), resetGraph: true });
+			} else {
 				visualizeDijkstra();
-				return;
 			}
-			visualizeDijkstra();
+		}
+	};
+
+	const handleRecursiveMazeAlgo = (orientation = 'horizontal') => {
+		if (state.isPathAnimationFinished || state.isMazeAnimationFinished) {
+			resetAndAnimateType.current = 'recursive-maze';
+			setState({ ...getInitialState(), resetGraph: true });
+			return;
+		}
+		const wallsToAnimate = recursiveDivisionMaze(
+			state.grid,
+			2,
+			state.grid.length - 3,
+			2,
+			state.grid[0].length - 3,
+			false,
+			[],
+			orientation
+		);
+
+		for (let i = 0; i < wallsToAnimate.length; i++) {
+			setTimeout(() => {
+				const wallNode = wallsToAnimate[i];
+				const newGrid = getNewGridWithWallToggled(
+					state.grid,
+					wallNode.row,
+					wallNode.col,
+					true
+				);
+				setState((prevState) => ({
+					...prevState,
+					grid: newGrid,
+					isMazeAnimationFinished: true,
+				}));
+			}, 20 * animationSpeed * i);
+		}
+		resetAndAnimateType.current = null;
+	};
+
+	const handleAnimatePathAlgoChange = () => {
+		const algo = state.usedPathAlgo;
+
+		if (algo === 'djikstra') {
+			handleDijkstraAlgo();
+		}
+	};
+
+	const handleAnimateMazeAlgoChange = (e) => {
+		const algo = e.target.value;
+
+		if (algo === 'recursive-horizontal') {
+			handleRecursiveMazeAlgo('horizontal');
+		} else if (algo === 'recursive-vertical') {
+			handleRecursiveMazeAlgo('vertical');
 		}
 	};
 
 	return (
 		<Flex direction="column" justify="center" w={'100%'}>
 			<Heading mx="auto" mt={10} size="lg">
-				Dijsktra Algo Visualizer
+				Algo Visualizer
 			</Heading>
+
 			<Flex
-				my={5}
+				my={[2, 2, 5]}
 				mx="auto"
-				direction={['column', 'row']}
-				alignItems={'center'}>
-				<Flex mx="auto" mb={5}>
-					<Button
-						colorScheme="teal"
-						disabled={state.isAnimating || state.isInAnimationFinishedState}
-						onClick={handleVisualizeDijkstraAlgorithm}
-						mr={5}>
-						Visualize!
-					</Button>
-					<Button
-						colorScheme="red"
-						disabled={state.isAnimating}
-						onClick={() => setState(INITIAL_STATE)}>
-						Reset board
-					</Button>
+				wrap={'wrap'}
+				justify="center"
+				align="center">
+				<Flex
+					direction="column"
+					background="blue.50"
+					px={4}
+					py={3}
+					ml={5}
+					mb={[2, 2, 0]}
+					rounded={5}
+					disabled={state.isAnimating}>
+					<Heading as="h4" size="sm" mb={2}>
+						Select Path Algo
+					</Heading>
+					<Select
+						placeholder="Choose path algo"
+						bg="white"
+						value={state.usedPathAlgo}
+						onChange={(e) =>
+							setState((prevState) => ({
+								...prevState,
+								usedPathAlgo: e.target.value,
+							}))
+						}
+						isDisabled={state.isAnimating}>
+						<option value="djikstra">Djikstra</option>
+					</Select>
+				</Flex>
+				<Flex
+					direction="column"
+					background="blue.50"
+					px={4}
+					py={3}
+					ml={5}
+					mb={[2, 2, 0]}
+					rounded={5}>
+					<Heading as="h4" size="sm" mb={2}>
+						Select Maze Algo
+					</Heading>
+					<Select
+						placeholder="Choose maze algo"
+						bg="white"
+						onChange={handleAnimateMazeAlgoChange}
+						isDisabled={state.isAnimating}>
+						<option value="recursive-horizontal">Recursive (horizontal)</option>
+						<option value="recursive-vertical">Recursive (vertical)</option>
+					</Select>
 				</Flex>
 				<Center wrap="wrap" maxWidth="90vw">
 					<Flex
+						ml={[0, 4]}
 						background="blue.50"
-						py={3}
+						py={4}
 						px={5}
 						rounded={5}
 						direction="column"
@@ -189,6 +290,8 @@ const PathFindingVisualizer = () => {
 						</Heading>
 						<Flex mt={3}>
 							<Slider
+								isReadOnly={state.isAnimating}
+								isDisabled={state.isAnimating}
 								maxWidth={['100px', '140px']}
 								aria-label="slider"
 								min={1}
@@ -240,20 +343,38 @@ const PathFindingVisualizer = () => {
 				</Center>
 			</Flex>
 
-			<Flex mx="auto" mb={5} maxWidth={'80%'}>
+			<Flex
+				mx="auto"
+				mb={[2, 2, 5]}
+				wrap="wrap"
+				maxWidth="90vw"
+				justify="center"
+				align="center">
+				<Button
+					colorScheme="teal"
+					loadingText="Animating..."
+					isLoading={state.isAnimating || !state.usedPathAlgo}
+					onClick={handleAnimatePathAlgoChange}
+					mr={5}>
+					Visualize!
+				</Button>
+				<Button
+					colorScheme="red"
+					disabled={state.isAnimating}
+					onClick={() => setState({ ...getInitialState() })}
+					mr={5}>
+					Reset board
+				</Button>
 				<Alert
+					width="max-content"
 					rounded={5}
-					status={
-						!state.isAnimating && !state.isInAnimationFinishedState
-							? 'info'
-							: 'warning'
-					}>
+					py={2}
+					mt={[2, 2, 0]}
+					status={!state.isAnimating ? 'info' : 'warning'}>
 					<AlertIcon />
-					{!state.isAnimating && !state.isInAnimationFinishedState
-						? 'Draw some walls using pencil and Click on Visualize button to begin!'
-						: state.isAnimating && !state.isInAnimationFinishedState
-						? 'Please wait for the algorithm to finish!'
-						: 'Please reset board to view again!'}
+					{!state.isAnimating
+						? 'Draw walls using pencil or chose algo and click Visualize!'
+						: 'Please wait for the algorithm animation to finish!'}
 				</Alert>
 			</Flex>
 
@@ -265,8 +386,6 @@ const PathFindingVisualizer = () => {
 							className={`grid-row ${
 								state.isAnimating
 									? 'grid-progress'
-									: state.isInAnimationFinishedState
-									? 'grid-block'
 									: isPencil
 									? 'grid-pencil'
 									: 'grid-eraser'
