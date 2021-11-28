@@ -32,7 +32,7 @@ export const getNewGridWithWallToggled = (grid, row, col, isDrawing) => {
 	const newNode = {
 		...node,
 		isWall: isDrawing,
-		className: isDrawing ? node.className + ' node-wall' : 'node',
+		className: isDrawing ? 'node node-wall' : 'node',
 	};
 	newGrid[row][col] = newNode;
 	return newGrid;

@@ -27,6 +27,7 @@ import { ImPencil2 } from 'react-icons/im';
 import { FaEraser } from 'react-icons/fa';
 import { recursiveDivisionMaze } from '../utils/maze-generation/recursive-division';
 import lodash from 'lodash';
+import { eller } from '../utils/maze-generation/ellers';
 
 const width =
 	window.innerWidth ||
@@ -37,8 +38,12 @@ const height =
 	document.documentElement.clientHeight ||
 	document.body.clientHeight;
 
-const numRows = Math.floor(height / 60);
-const numColumns = Math.floor(width / 35);
+let numRows = Math.floor(height / 50);
+let numColumns = Math.floor(width / 35);
+
+if (numRows % 2 === 0) numRows++;
+if (numColumns % 2 === 0) numColumns++;
+
 const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
 
 const INITIAL_STATE = {
@@ -53,6 +58,7 @@ const INITIAL_STATE = {
 	isPathAnimationFinished: false,
 	isMazeAnimationFinished: false,
 	usedPathAlgo: 'djikstra',
+	usedMazeAlgo: '',
 	numRows,
 	numColumns,
 };
@@ -164,10 +170,33 @@ const PathFindingVisualizer = () => {
 		}
 	};
 
+	const handleEllerAlgo = () => {
+		const wallsToAnimate = eller(grid);
+		for (let i = 0; i < wallsToAnimate.length; i++) {
+			setTimeout(() => {
+				const wallNode = wallsToAnimate[i];
+				const newGrid = getNewGridWithWallToggled(
+					state.grid,
+					wallNode.row,
+					wallNode.col,
+					true
+				);
+				const isLastAnimation = i === wallsToAnimate.length - 1;
+				setState((prevState) => ({
+					...prevState,
+					grid: newGrid,
+					isMazeAnimationFinished: isLastAnimation,
+					isAnimating: !isLastAnimation,
+				}));
+			}, 15 * animationSpeed * i);
+		}
+		resetAndAnimateType.current = null;
+	};
+
 	const handleRecursiveMazeAlgo = (orientation = 'horizontal') => {
 		if (state.isPathAnimationFinished || state.isMazeAnimationFinished) {
 			resetAndAnimateType.current = 'recursive-maze';
-			setState({ ...getInitialState(), resetGraph: true });
+			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
 			return;
 		}
 		const wallsToAnimate = recursiveDivisionMaze(
@@ -190,12 +219,14 @@ const PathFindingVisualizer = () => {
 					wallNode.col,
 					true
 				);
+				const isLastAnimation = i === wallsToAnimate.length - 1;
 				setState((prevState) => ({
 					...prevState,
 					grid: newGrid,
-					isMazeAnimationFinished: true,
+					isMazeAnimationFinished: isLastAnimation,
+					isAnimating: !isLastAnimation,
 				}));
-			}, 20 * animationSpeed * i);
+			}, 50 * animationSpeed * i);
 		}
 		resetAndAnimateType.current = null;
 	};
@@ -210,19 +241,23 @@ const PathFindingVisualizer = () => {
 
 	const handleAnimateMazeAlgoChange = (e) => {
 		const algo = e.target.value;
+		if (!algo) return;
 
+		setState((prevState) => ({ ...prevState, usedMazeAlgo: algo }));
 		if (algo === 'recursive-horizontal') {
 			handleRecursiveMazeAlgo('horizontal');
 		} else if (algo === 'recursive-vertical') {
 			handleRecursiveMazeAlgo('vertical');
+		} else if (algo === 'eller') {
+			handleEllerAlgo();
 		}
 	};
 
 	return (
 		<Flex direction="column" justify="center" w={'100%'}>
-			<Heading mx="auto" mt={10} size="lg">
-				Algo Visualizer
-			</Heading>
+			<Center className="logo" zIndex={99999}>
+				<Text>Algo Visualizer</Text>
+			</Center>
 
 			<Flex
 				my={[2, 2, 5]}
@@ -246,12 +281,13 @@ const PathFindingVisualizer = () => {
 						placeholder="Choose path algo"
 						bg="white"
 						value={state.usedPathAlgo}
-						onChange={(e) =>
+						onChange={(e) => {
+							if (!e.target.value) return;
 							setState((prevState) => ({
 								...prevState,
 								usedPathAlgo: e.target.value,
-							}))
-						}
+							}));
+						}}
 						isDisabled={state.isAnimating}>
 						<option value="djikstra">Djikstra</option>
 					</Select>
@@ -268,12 +304,14 @@ const PathFindingVisualizer = () => {
 						Select Maze Algo
 					</Heading>
 					<Select
-						placeholder="Choose maze algo"
 						bg="white"
+						value={state.usedMazeAlgo}
 						onChange={handleAnimateMazeAlgoChange}
 						isDisabled={state.isAnimating}>
+						<option value=" ">Choose maze algo</option>
 						<option value="recursive-horizontal">Recursive (horizontal)</option>
 						<option value="recursive-vertical">Recursive (vertical)</option>
+						<option value="eller">Eller</option>
 					</Select>
 				</Flex>
 				<Center wrap="wrap" maxWidth="90vw">
@@ -377,6 +415,14 @@ const PathFindingVisualizer = () => {
 						: 'Please wait for the algorithm animation to finish!'}
 				</Alert>
 			</Flex>
+			<Flex justify="center" wrap="wrap" mx="auto">
+				<LegendItem title="Unvisited Node" className="node" />
+				<LegendItem title="Visited Node" className="node node-visited" />
+				<LegendItem title="Wall" className="node node-wall" />
+				<LegendItem title="Shortest Path" className="node node-shortest-path" />
+				<LegendItem title="Start Node" className="node node-start" />
+				<LegendItem title="Finish Node" className="node node-finish" />
+			</Flex>
 
 			<Flex direction="column" mx="auto">
 				{state.grid.map((row, rowIdx) => {
@@ -410,22 +456,6 @@ const PathFindingVisualizer = () => {
 					);
 				})}
 			</Flex>
-			<Flex mx="auto" direction="column" maxWidth="80%" my={3}>
-				<Heading size="lg" mb={5} mx="auto">
-					Legends
-				</Heading>
-				<Flex justify="center" wrap="wrap">
-					<LegendItem title="Unvisited Node" className="node" />
-					<LegendItem title="Visited Node" className="node node-visited" />
-					<LegendItem title="Wall" className="node node-wall" />
-					<LegendItem
-						title="Shortest Path"
-						className="node node-shortest-path"
-					/>
-					<LegendItem title="Start Node" className="node node-start" />
-					<LegendItem title="Finish Node" className="node node-finish" />
-				</Flex>
-			</Flex>
 		</Flex>
 	);
 };
@@ -434,7 +464,15 @@ export default PathFindingVisualizer;
 
 const LegendItem = ({ title, className }) => {
 	return (
-		<Flex mx={2} mb={2} direction="column" alignItems="center">
+		<Flex
+			mx={2}
+			p={2}
+			rounded={5}
+			border="1px solid"
+			borderColor="blue.200"
+			mb={2}
+			direction="column"
+			alignItems="center">
 			<Text>{title}</Text>
 			<Flex className={className}></Flex>
 		</Flex>

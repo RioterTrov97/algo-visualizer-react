@@ -17,3 +17,37 @@
 .grid-progress {
 	cursor: progress;
 }
+
+.logo {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	width: 100px;
+	height: 100px;
+	background: rgb(0, 104, 255);
+	background: linear-gradient(
+		45deg,
+		rgba(0, 104, 255, 1) 18%,
+		rgba(255, 0, 228, 1) 100%
+	);
+	text-align: center;
+	border-radius: 100%;
+	animation: spin 10s linear infinite;
+}
+
+.logo > p {
+	color: white;
+	font-weight: bold;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	50% {
+		transform: rotate(180deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
