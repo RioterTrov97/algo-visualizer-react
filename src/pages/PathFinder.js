@@ -22,6 +22,11 @@ import {
 	Icon,
 	Center,
 	Select,
+	Accordion,
+	AccordionItem,
+	AccordionButton,
+	AccordionPanel,
+	useBreakpointValue,
 } from '@chakra-ui/react';
 import { ImPencil2 } from 'react-icons/im';
 import { FaEraser } from 'react-icons/fa';
@@ -29,47 +34,68 @@ import { recursiveDivisionMaze } from '../utils/maze-generation/recursive-divisi
 import lodash from 'lodash';
 import { eller } from '../utils/maze-generation/ellers';
 
-const width =
-	window.innerWidth ||
-	document.documentElement.clientWidth ||
-	document.body.clientWidth;
-const height =
-	window.innerHeight ||
-	document.documentElement.clientHeight ||
-	document.body.clientHeight;
+const getInitialState = () => {
+	const width =
+		window.innerWidth ||
+		document.documentElement.clientWidth ||
+		document.body.clientWidth;
+	const height =
+		window.innerHeight ||
+		document.documentElement.clientHeight ||
+		document.body.clientHeight;
 
-let numRows = Math.floor(height / 50);
-let numColumns = Math.floor(width / 35);
+	let numRows = Math.floor(height / 50);
+	let numColumns = Math.floor(width / 35);
 
-if (numRows % 2 === 0) numRows++;
-if (numColumns % 2 === 0) numColumns++;
+	if (numRows % 2 === 0) numRows++;
+	if (numColumns % 2 === 0) numColumns++;
 
-const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
+	const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
 
-const INITIAL_STATE = {
-	grid,
-	startNode,
-	finishNode,
-	animationSpeed: 10,
-	mouseIsPressed: false,
-	resetGraph: false,
-	resetGraphType: null,
-	isAnimating: false,
-	isPathAnimationFinished: false,
-	isMazeAnimationFinished: false,
-	usedPathAlgo: 'djikstra',
-	usedMazeAlgo: '',
-	numRows,
-	numColumns,
+	const INITIAL_STATE = {
+		grid,
+		startNode,
+		finishNode,
+		animationSpeed: 10,
+		mouseIsPressed: false,
+		resetGraph: false,
+		resetGraphType: null,
+		isAnimating: false,
+		isPathAnimationFinished: false,
+		isMazeAnimationFinished: false,
+		usedPathAlgo: 'djikstra',
+		usedMazeAlgo: '',
+		numRows,
+		numColumns,
+	};
+	return lodash.cloneDeep(INITIAL_STATE);
 };
-
-const getInitialState = () => lodash.cloneDeep(INITIAL_STATE);
 
 const PathFindingVisualizer = () => {
 	const [state, setState] = useState(getInitialState());
 	const [isPencil, setIsPencil] = useState(true);
+	const [accord, setAccord] = useState(0);
 	const resetAndAnimateType = useRef(null);
-	const animationSpeed = 11 - state.animationSpeed;
+	const animationSpeed = (11 - state.animationSpeed) * 20;
+	const isMobile = useBreakpointValue({
+		base: true,
+		md: true,
+		lg: false,
+	});
+	const viewportWidth = useBreakpointValue({
+		base: 0,
+		md: 1,
+		lg: 2,
+		xl: 3,
+	});
+
+	useEffect(() => {
+		setState({ ...getInitialState() });
+
+		setAccord(isMobile ? 1 : 0);
+
+		//eslint-disable-next-line
+	}, [viewportWidth]);
 
 	useEffect(() => {
 		if (state.resetGraph) {
@@ -129,7 +155,7 @@ const PathFindingVisualizer = () => {
 						isPathAnimationFinished: true,
 					}));
 				}
-			}, 10 * animationSpeed * i);
+			}, animationSpeed * i);
 		}
 		resetAndAnimateType.current = null;
 	};
@@ -146,7 +172,7 @@ const PathFindingVisualizer = () => {
 					newClassName
 				);
 				setState((prevState) => ({ ...prevState, grid: newGrid }));
-			}, 20 * animationSpeed * i);
+			}, animationSpeed * i);
 		}
 	};
 
@@ -171,7 +197,7 @@ const PathFindingVisualizer = () => {
 	};
 
 	const handleEllerAlgo = () => {
-		const wallsToAnimate = eller(grid);
+		const wallsToAnimate = eller(state.grid);
 		for (let i = 0; i < wallsToAnimate.length; i++) {
 			setTimeout(() => {
 				const wallNode = wallsToAnimate[i];
@@ -188,7 +214,7 @@ const PathFindingVisualizer = () => {
 					isMazeAnimationFinished: isLastAnimation,
 					isAnimating: !isLastAnimation,
 				}));
-			}, 15 * animationSpeed * i);
+			}, animationSpeed * i);
 		}
 		resetAndAnimateType.current = null;
 	};
@@ -226,7 +252,7 @@ const PathFindingVisualizer = () => {
 					isMazeAnimationFinished: isLastAnimation,
 					isAnimating: !isLastAnimation,
 				}));
-			}, 50 * animationSpeed * i);
+			}, animationSpeed * i);
 		}
 		resetAndAnimateType.current = null;
 	};
@@ -255,132 +281,180 @@ const PathFindingVisualizer = () => {
 
 	return (
 		<Flex direction="column" justify="center" w={'100%'}>
-			<Center className="logo" zIndex={99999}>
-				<Text>Algo Visualizer</Text>
+			<Center
+				className={!isMobile ? 'logo' : 'logo-mobile'}
+				zIndex={99999}
+				my={isMobile && 3}>
+				<Heading as="h2" size={!isMobile ? 'md' : 'lg'} mb={2}>
+					Algo Visualizer
+				</Heading>
 			</Center>
-
-			<Flex
-				my={[2, 2, 5]}
-				mx="auto"
-				wrap={'wrap'}
-				justify="center"
-				align="center">
-				<Flex
-					direction="column"
-					background="blue.50"
-					px={4}
-					py={3}
-					ml={5}
-					mb={[2, 2, 0]}
-					rounded={5}
-					disabled={state.isAnimating}>
-					<Heading as="h4" size="sm" mb={2}>
-						Select Path Algo
-					</Heading>
-					<Select
-						placeholder="Choose path algo"
-						bg="white"
-						value={state.usedPathAlgo}
-						onChange={(e) => {
-							if (!e.target.value) return;
-							setState((prevState) => ({
-								...prevState,
-								usedPathAlgo: e.target.value,
-							}));
-						}}
-						isDisabled={state.isAnimating}>
-						<option value="djikstra">Djikstra</option>
-					</Select>
-				</Flex>
-				<Flex
-					direction="column"
-					background="blue.50"
-					px={4}
-					py={3}
-					ml={5}
-					mb={[2, 2, 0]}
-					rounded={5}>
-					<Heading as="h4" size="sm" mb={2}>
-						Select Maze Algo
-					</Heading>
-					<Select
-						bg="white"
-						value={state.usedMazeAlgo}
-						onChange={handleAnimateMazeAlgoChange}
-						isDisabled={state.isAnimating}>
-						<option value=" ">Choose maze algo</option>
-						<option value="recursive-horizontal">Recursive (horizontal)</option>
-						<option value="recursive-vertical">Recursive (vertical)</option>
-						<option value="eller">Eller</option>
-					</Select>
-				</Flex>
-				<Center wrap="wrap" maxWidth="90vw">
-					<Flex
-						ml={[0, 4]}
-						background="blue.50"
-						py={4}
-						px={5}
-						rounded={5}
-						direction="column"
-						w="max-content">
-						<Heading as="h4" size="sm" mr={[2, 5]}>
-							Animation Speed
-						</Heading>
-						<Flex mt={3}>
-							<Slider
-								isReadOnly={state.isAnimating}
-								isDisabled={state.isAnimating}
-								maxWidth={['100px', '140px']}
-								aria-label="slider"
-								min={1}
-								max={10}
-								defaultValue={state.animationSpeed}
-								onChange={(value) =>
-									setState((prevState) => ({
-										...prevState,
-										animationSpeed: value,
-									}))
-								}>
-								<SliderTrack bg="blue.100">
-									<SliderFilledTrack bg="cyan.400" />
-								</SliderTrack>
-								<SliderThumb bg="cyan.600" />
-							</Slider>
-							<Text ml={2} fontWeight="bold" color="cyan.700">
-								{state.animationSpeed}
-							</Text>
+			{!isMobile && <Text className="emoji-animation">🕵️</Text>}
+			<Accordion
+				index={accord}
+				allowToggle={isMobile ? true : false}
+				onChange={(e) => setAccord(e)}>
+				<AccordionItem isFocusable={false} border="0px">
+					<Center>
+						<AccordionButton
+							w="max-content"
+							variant="ghost"
+							_focus={{ boxShadow: 'none' }}
+							_hover={{ bg: 'blue.200' }}
+							mb={isMobile ? 5 : 0}
+							bg={isMobile && 'blue.100'}
+							rounded={50}>
+							{isMobile && (
+								<Center flex="1" textAlign="left">
+									<Text fontWeight="600">Algo Tuners (Click me)</Text>
+									<Text className="gear" ml={2}>
+										⚙️
+									</Text>
+								</Center>
+							)}
+						</AccordionButton>
+					</Center>
+					<AccordionPanel pb={4}>
+						<Flex
+							my={[2, 2, 5]}
+							mx="auto"
+							wrap={'wrap'}
+							justify="center"
+							align="center">
+							<Flex
+								direction="column"
+								background="blue.50"
+								px={4}
+								py={3}
+								ml={5}
+								mb={[2, 2, 0]}
+								rounded={5}
+								disabled={state.isAnimating}>
+								<Heading as="h4" size="sm" mb={2}>
+									Select Path Algo
+								</Heading>
+								<Select
+									placeholder="Choose path algo"
+									bg="white"
+									value={state.usedPathAlgo}
+									onChange={(e) => {
+										if (!e.target.value) return;
+										setState((prevState) => ({
+											...prevState,
+											usedPathAlgo: e.target.value,
+										}));
+									}}
+									isDisabled={state.isAnimating}>
+									<option value="djikstra">Djikstra</option>
+								</Select>
+							</Flex>
+							<Flex
+								direction="column"
+								background="blue.50"
+								px={4}
+								py={3}
+								ml={5}
+								mb={[2, 2, 0]}
+								rounded={5}>
+								<Heading as="h4" size="sm" mb={2}>
+									Select Maze Algo
+								</Heading>
+								<Select
+									bg="white"
+									value={state.usedMazeAlgo}
+									onChange={handleAnimateMazeAlgoChange}
+									isDisabled={state.isAnimating}>
+									<option value=" ">Choose maze algo</option>
+									<option value="recursive-horizontal">
+										Recursive (horizontal)
+									</option>
+									<option value="recursive-vertical">
+										Recursive (vertical)
+									</option>
+									<option value="eller">Eller</option>
+								</Select>
+							</Flex>
+							<Center wrap="wrap" maxWidth="90vw">
+								<Flex
+									ml={[0, 4]}
+									background="blue.50"
+									py={4}
+									px={5}
+									rounded={5}
+									direction="column"
+									w="max-content">
+									<Heading as="h4" size="sm" mr={[2, 5]}>
+										Animation Speed
+									</Heading>
+									<Flex mt={3}>
+										<Slider
+											isReadOnly={state.isAnimating}
+											isDisabled={state.isAnimating}
+											maxWidth={['100px', '140px']}
+											aria-label="slider"
+											min={1}
+											max={10}
+											defaultValue={state.animationSpeed}
+											onChange={(value) =>
+												setState((prevState) => ({
+													...prevState,
+													animationSpeed: value,
+												}))
+											}>
+											<SliderTrack bg="blue.100">
+												<SliderFilledTrack bg="cyan.400" />
+											</SliderTrack>
+											<SliderThumb bg="cyan.600" />
+										</Slider>
+										<Text ml={4} fontWeight="bold" color="cyan.700">
+											{state.animationSpeed}
+										</Text>
+									</Flex>
+								</Flex>
+								<Flex
+									background="blue.50"
+									px={4}
+									py={2}
+									ml={5}
+									rounded={5}
+									direction="column"
+									w="max-content">
+									<Heading as="h4" size="sm">
+										Pencil/Eraser
+									</Heading>
+									<Flex mx="auto" mt={2}>
+										<IconButton
+											colorScheme={isPencil ? 'cyan' : 'gray'}
+											onClick={() => setIsPencil(true)}
+											aria-label="Search database"
+											icon={<Icon as={ImPencil2} />}
+											mr={5}
+										/>
+										<IconButton
+											colorScheme={!isPencil ? 'cyan' : 'gray'}
+											onClick={() => setIsPencil(false)}
+											aria-label="Search database"
+											icon={<Icon as={FaEraser} />}
+										/>
+									</Flex>
+								</Flex>
+							</Center>
 						</Flex>
-					</Flex>
-					<Flex
-						background="blue.50"
-						px={4}
-						py={2}
-						ml={5}
-						rounded={5}
-						direction="column"
-						w="max-content">
-						<Heading as="h4" size="sm">
-							Pencil/Eraser
-						</Heading>
-						<Flex mx="auto" mt={2}>
-							<IconButton
-								colorScheme={isPencil ? 'cyan' : 'gray'}
-								onClick={() => setIsPencil(true)}
-								aria-label="Search database"
-								icon={<Icon as={ImPencil2} />}
-								mr={5}
-							/>
-							<IconButton
-								colorScheme={!isPencil ? 'cyan' : 'gray'}
-								onClick={() => setIsPencil(false)}
-								aria-label="Search database"
-								icon={<Icon as={FaEraser} />}
-							/>
-						</Flex>
-					</Flex>
-				</Center>
-			</Flex>
 
+						<Flex justify="center" wrap="wrap" mx="auto">
+							<LegendItem title="Unvisited" className="node" />
+							<LegendItem title="Visited" className="node node-visited" />
+							<LegendItem title="Wall" className="node node-wall" />
+							<LegendItem
+								title="ShortPath"
+								className="node node-shortest-path"
+							/>
+							<LegendItem title="Start" className="node node-start" />
+							<LegendItem title="Finish" className="node node-finish" />
+						</Flex>
+					</AccordionPanel>
+				</AccordionItem>
+			</Accordion>
 			<Flex
 				mx="auto"
 				mb={[2, 2, 5]}
@@ -415,15 +489,6 @@ const PathFindingVisualizer = () => {
 						: 'Please wait for the algorithm animation to finish!'}
 				</Alert>
 			</Flex>
-			<Flex justify="center" wrap="wrap" mx="auto">
-				<LegendItem title="Unvisited Node" className="node" />
-				<LegendItem title="Visited Node" className="node node-visited" />
-				<LegendItem title="Wall" className="node node-wall" />
-				<LegendItem title="Shortest Path" className="node node-shortest-path" />
-				<LegendItem title="Start Node" className="node node-start" />
-				<LegendItem title="Finish Node" className="node node-finish" />
-			</Flex>
-
 			<Flex direction="column" mx="auto">
 				{state.grid.map((row, rowIdx) => {
 					return (

@@ -23,21 +23,39 @@
 	top: 10px;
 	left: 10px;
 	width: 100px;
-	height: 100px;
-	background: rgb(0, 104, 255);
-	background: linear-gradient(
-		45deg,
-		rgba(0, 104, 255, 1) 18%,
-		rgba(255, 0, 228, 1) 100%
-	);
 	text-align: center;
-	border-radius: 100%;
-	animation: spin 10s linear infinite;
 }
 
-.logo > p {
-	color: white;
-	font-weight: bold;
+.emoji-animation {
+	position: absolute;
+	font-size: 28px;
+	top: 16px;
+	left: 110px;
+	animation-name: bounce;
+	animation-timing-function: cubic-bezier(0.28, 0.84, 0.42, 1);
+	animation-duration: 2s;
+	animation-iteration-count: infinite;
+	transform-origin: bottom;
+}
+
+.gear {
+	animation: spin 2s linear infinite;
+}
+
+.logo-mobile,
+.logo {
+	background: linear-gradient(
+		to right,
+		rgb(0, 80, 209) 10%,
+		#ae00ff 30%,
+		#ff00f2 50%,
+		rgb(0, 151, 197) 70%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-size: 200% auto;
+	animation: color-change 15s linear infinite;
 }
 
 @keyframes spin {
@@ -49,5 +67,35 @@
 	}
 	100% {
 		transform: rotate(360deg);
+	}
+}
+
+@keyframes color-change {
+	to {
+		background-position: 300%;
+	}
+}
+
+@keyframes bounce {
+	0% {
+		transform: scale(1, 1) translateY(0);
+	}
+	10% {
+		transform: scale(1.1, 0.9) translateY(0);
+	}
+	30% {
+		transform: scale(0.9, 1.1) translateY(-15px);
+	}
+	50% {
+		transform: scale(1.05, 0.95) translateY(0);
+	}
+	57% {
+		transform: scale(1, 1) translateY(-7px);
+	}
+	64% {
+		transform: scale(1, 1) translateY(0);
+	}
+	100% {
+		transform: scale(1, 1) translateY(0);
 	}
 }
