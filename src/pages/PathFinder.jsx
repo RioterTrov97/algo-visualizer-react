@@ -31,7 +31,6 @@ import {
 import { ImPencil2 } from 'react-icons/im';
 import { FaEraser } from 'react-icons/fa';
 import { recursiveDivisionMaze } from '../utils/maze-generation/recursive-division';
-import lodash from 'lodash';
 import { eller } from '../utils/maze-generation/ellers';
 
 const getInitialState = () => {
@@ -52,7 +51,7 @@ const getInitialState = () => {
 
 	const [grid, startNode, finishNode] = getInitialGrid(numRows, numColumns);
 
-	const INITIAL_STATE = {
+	return {
 		grid,
 		startNode,
 		finishNode,
@@ -68,7 +67,6 @@ const getInitialState = () => {
 		numRows,
 		numColumns,
 	};
-	return lodash.cloneDeep(INITIAL_STATE);
 };
 
 const PathFindingVisualizer = () => {
@@ -135,7 +133,7 @@ const PathFindingVisualizer = () => {
 			if (i === visitedNodesInOrder.length) {
 				setTimeout(() => {
 					animateShortestPath(nodesInShortestPathOrder);
-				}, 10 * animationSpeed * i);
+				}, animationSpeed * i);
 				return;
 			}
 			setTimeout(() => {

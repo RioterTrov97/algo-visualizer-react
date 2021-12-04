@@ -1,3 +1,4 @@
+import React from 'react';
 import './styles/app.css';
 import PathFinder from './pages/PathFinder';
 
