@@ -169,12 +169,14 @@ export const ControlPanel = ({
 									aria-label="Pencil tool"
 									icon={<Icon as={ImPencil2} />}
 									mr={5}
+									disabled={isAnimating}
 								/>
 								<IconButton
 									colorScheme={!isPencil ? 'cyan' : 'gray'}
 									onClick={() => onPencilChange(false)}
 									aria-label="Eraser tool"
 									icon={<Icon as={FaEraser} />}
+									disabled={isAnimating}
 								/>
 							</Flex>
 						</Flex>
