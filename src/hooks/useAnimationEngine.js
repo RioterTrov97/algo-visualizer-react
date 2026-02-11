@@ -180,7 +180,7 @@ export const useAnimationEngine = (
 		requestAnimationFrame(animate);
 	};
 
-	const animateDijkstra = (visitedNodesInOrder, nodesInShortestPathOrder) => {
+	const animatedNodes = (visitedNodesInOrder, nodesInShortestPathOrder) => {
 		setState((prevState) => ({ ...prevState, isAnimating: true }));
 		animateWithRAF(visitedNodesInOrder, 'node-visited', () => {
 			animateShortestPath(nodesInShortestPathOrder);
@@ -188,47 +188,25 @@ export const useAnimationEngine = (
 		resetAndAnimateType.current = null;
 	};
 
-	const visualizeDijkstra = () => {
+	const visualizePathfinding = (algorithmFn) => {
 		const grid = state.grid;
 		const startNode = grid[state.startNode[0]][state.startNode[1]];
 		const finishNode = grid[state.finishNode[0]][state.finishNode[1]];
-		const visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
+		const visitedNodesInOrder = algorithmFn(grid, startNode, finishNode);
 		const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-		animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
+		animatedNodes(visitedNodesInOrder, nodesInShortestPathOrder);
 	};
 
-	const visualizeAStar = () => {
-		const grid = state.grid;
-		const startNode = grid[state.startNode[0]][state.startNode[1]];
-		const finishNode = grid[state.finishNode[0]][state.finishNode[1]];
-		const visitedNodesInOrder = aStar(grid, startNode, finishNode);
-		const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-		animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
-	};
-
-	const visualizeBFS = () => {
-		const grid = state.grid;
-		const startNode = grid[state.startNode[0]][state.startNode[1]];
-		const finishNode = grid[state.finishNode[0]][state.finishNode[1]];
-		const visitedNodesInOrder = bfs(grid, startNode, finishNode);
-		const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-		animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
-	};
-
-	const visualizeGreedyBestFirst = () => {
-		const grid = state.grid;
-		const startNode = grid[state.startNode[0]][state.startNode[1]];
-		const finishNode = grid[state.finishNode[0]][state.finishNode[1]];
-		const visitedNodesInOrder = greedyBestFirst(grid, startNode, finishNode);
-		const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-		animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
-	};
+	const visualizeDijkstra = () => visualizePathfinding(dijkstra);
+	const visualizeAStar = () => visualizePathfinding(aStar);
+	const visualizeBFS = () => visualizePathfinding(bfs);
+	const visualizeGreedyBestFirst = () => visualizePathfinding(greedyBestFirst);
 
 	return {
 		animateWithRAF,
 		animateWalls,
 		animateShortestPath,
-		animateDijkstra,
+		animatedNodes,
 		visualizeDijkstra,
 		visualizeAStar,
 		visualizeBFS,

@@ -5,6 +5,21 @@ import { kruskals } from '../utils/maze-generation/kruskals';
 import { sidewinder } from '../utils/maze-generation/sidewinder';
 import { resetGridForNewPathfinding } from '../utils/path-finding-utils';
 
+const PATH_ALGORITHMS = {
+	djikstra: 'djikstra',
+	astar: 'astar',
+	bfs: 'bfs',
+	greedy: 'greedy',
+};
+
+const MAZE_ALGORITHMS = {
+	eller: 'eller',
+	prims: 'prims',
+	kruskals: 'kruskals',
+	sidewinder: 'sidewinder',
+	'recursive-maze': 'recursive-maze',
+};
+
 export const useAlgorithmHandlers = (
 	state,
 	setState,
@@ -16,85 +31,33 @@ export const useAlgorithmHandlers = (
 	resetAndAnimateType,
 	getInitialState,
 ) => {
-	const handleDijkstraAlgo = () => {
+	// Generic path algorithm handler
+	const handlePathAlgo = (algoType, visualizeFunc) => {
 		if (!state.isAnimating) {
 			if (state.isPathAnimationFinished) {
-				// Reset visited nodes while preserving walls
 				const resetGrid = resetGridForNewPathfinding(state.grid);
 				setState((prevState) => ({
 					...prevState,
 					grid: resetGrid,
 					isPathAnimationFinished: false,
 				}));
-				resetAndAnimateType.current = 'djikstra';
+				resetAndAnimateType.current = algoType;
 				setState((prevState) => ({ ...prevState, resetGraph: true }));
 			} else {
-				visualizeDijkstra();
+				visualizeFunc();
 			}
 		}
 	};
 
-	const handleAStarAlgo = () => {
-		if (!state.isAnimating) {
-			if (state.isPathAnimationFinished) {
-				// Reset visited nodes while preserving walls
-				const resetGrid = resetGridForNewPathfinding(state.grid);
-				setState((prevState) => ({
-					...prevState,
-					grid: resetGrid,
-					isPathAnimationFinished: false,
-				}));
-				resetAndAnimateType.current = 'astar';
-				setState((prevState) => ({ ...prevState, resetGraph: true }));
-			} else {
-				visualizeAStar();
-			}
-		}
-	};
-
-	const handleBFSAlgo = () => {
-		if (!state.isAnimating) {
-			if (state.isPathAnimationFinished) {
-				// Reset visited nodes while preserving walls
-				const resetGrid = resetGridForNewPathfinding(state.grid);
-				setState((prevState) => ({
-					...prevState,
-					grid: resetGrid,
-					isPathAnimationFinished: false,
-				}));
-				resetAndAnimateType.current = 'bfs';
-				setState((prevState) => ({ ...prevState, resetGraph: true }));
-			} else {
-				visualizeBFS();
-			}
-		}
-	};
-
-	const handleGreedyBestFirstAlgo = () => {
-		if (!state.isAnimating) {
-			if (state.isPathAnimationFinished) {
-				// Reset visited nodes while preserving walls
-				const resetGrid = resetGridForNewPathfinding(state.grid);
-				setState((prevState) => ({
-					...prevState,
-					grid: resetGrid,
-					isPathAnimationFinished: false,
-				}));
-				resetAndAnimateType.current = 'greedy';
-				setState((prevState) => ({ ...prevState, resetGraph: true }));
-			} else {
-				visualizeGreedyBestFirst();
-			}
-		}
-	};
-
-	const handleEllerAlgo = () => {
-		if (state.isMazeAnimationFinished) {
-			resetAndAnimateType.current = 'eller';
+	// Generic maze algorithm handler
+	const handleMazeAlgo = (algoType, mazeFunc, ...args) => {
+		if (state.isPathAnimationFinished || state.isMazeAnimationFinished) {
+			resetAndAnimateType.current = algoType;
 			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
 			return;
 		}
-		const wallsToAnimate = eller(state.grid);
+
+		const wallsToAnimate = mazeFunc(state.grid, ...args);
 		setState((prevState) => ({
 			...prevState,
 			isAnimating: true,
@@ -110,14 +73,27 @@ export const useAlgorithmHandlers = (
 		resetAndAnimateType.current = null;
 	};
 
+	// Path algorithm handlers
+	const handleDijkstraAlgo = () =>
+		handlePathAlgo(PATH_ALGORITHMS.djikstra, visualizeDijkstra);
+	const handleAStarAlgo = () =>
+		handlePathAlgo(PATH_ALGORITHMS.astar, visualizeAStar);
+	const handleBFSAlgo = () => handlePathAlgo(PATH_ALGORITHMS.bfs, visualizeBFS);
+	const handleGreedyBestFirstAlgo = () =>
+		handlePathAlgo(PATH_ALGORITHMS.greedy, visualizeGreedyBestFirst);
+
+	// Maze algorithm handlers
+	const handleEllerAlgo = () => handleMazeAlgo(MAZE_ALGORITHMS.eller, eller);
+	const handlePrimsAlgo = () => handleMazeAlgo(MAZE_ALGORITHMS.prims, prims);
+	const handleKruskalsAlgo = () =>
+		handleMazeAlgo(MAZE_ALGORITHMS.kruskals, kruskals);
+	const handleSidewinderAlgo = () =>
+		handleMazeAlgo(MAZE_ALGORITHMS.sidewinder, sidewinder);
+
 	const handleRecursiveMazeAlgo = (orientation = 'horizontal') => {
-		if (state.isPathAnimationFinished || state.isMazeAnimationFinished) {
-			resetAndAnimateType.current = 'recursive-maze';
-			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
-			return;
-		}
-		const wallsToAnimate = recursiveDivisionMaze(
-			state.grid,
+		handleMazeAlgo(
+			MAZE_ALGORITHMS['recursive-maze'],
+			recursiveDivisionMaze,
 			2,
 			state.grid.length - 3,
 			2,
@@ -126,119 +102,40 @@ export const useAlgorithmHandlers = (
 			[],
 			orientation,
 		);
-
-		setState((prevState) => ({
-			...prevState,
-			isAnimating: true,
-			isPathAnimationFinished: false,
-		}));
-		animateWalls(wallsToAnimate, () => {
-			setState((prevState) => ({
-				...prevState,
-				isMazeAnimationFinished: true,
-				isAnimating: false,
-			}));
-		});
-		resetAndAnimateType.current = null;
 	};
 
-	const handlePrimsAlgo = () => {
-		if (state.isMazeAnimationFinished) {
-			resetAndAnimateType.current = 'prims';
-			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
-			return;
-		}
-		const wallsToAnimate = prims(state.grid);
-		setState((prevState) => ({
-			...prevState,
-			isAnimating: true,
-			isPathAnimationFinished: false,
-		}));
-		animateWalls(wallsToAnimate, () => {
-			setState((prevState) => ({
-				...prevState,
-				isMazeAnimationFinished: true,
-				isAnimating: false,
-			}));
-		});
-		resetAndAnimateType.current = null;
-	};
+	const handleAnimatePathAlgoChange = (e) => {
+		const algo = e.target.value;
+		if (!algo) return;
 
-	const handleKruskalsAlgo = () => {
-		if (state.isMazeAnimationFinished) {
-			resetAndAnimateType.current = 'kruskals';
-			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
-			return;
-		}
-		const wallsToAnimate = kruskals(state.grid);
-		setState((prevState) => ({
-			...prevState,
-			isAnimating: true,
-			isPathAnimationFinished: false,
-		}));
-		animateWalls(wallsToAnimate, () => {
-			setState((prevState) => ({
-				...prevState,
-				isMazeAnimationFinished: true,
-				isAnimating: false,
-			}));
-		});
-		resetAndAnimateType.current = null;
-	};
+		const handlers = {
+			[PATH_ALGORITHMS.djikstra]: handleDijkstraAlgo,
+			[PATH_ALGORITHMS.astar]: handleAStarAlgo,
+			[PATH_ALGORITHMS.bfs]: handleBFSAlgo,
+			[PATH_ALGORITHMS.greedy]: handleGreedyBestFirstAlgo,
+		};
 
-	const handleSidewinderAlgo = () => {
-		if (state.isMazeAnimationFinished) {
-			resetAndAnimateType.current = 'sidewinder';
-			setState({ ...getInitialState(), resetGraph: true, isAnimating: true });
-			return;
-		}
-		const wallsToAnimate = sidewinder(state.grid);
-		setState((prevState) => ({
-			...prevState,
-			isAnimating: true,
-			isPathAnimationFinished: false,
-		}));
-		animateWalls(wallsToAnimate, () => {
-			setState((prevState) => ({
-				...prevState,
-				isMazeAnimationFinished: true,
-				isAnimating: false,
-			}));
-		});
-		resetAndAnimateType.current = null;
-	};
+		const handler = handlers[algo];
+		if (handler) handler();
 
-	const handleAnimatePathAlgoChange = () => {
-		const algo = state.usedPathAlgo;
-
-		if (algo === 'djikstra') {
-			handleDijkstraAlgo();
-		} else if (algo === 'astar') {
-			handleAStarAlgo();
-		} else if (algo === 'bfs') {
-			handleBFSAlgo();
-		} else if (algo === 'greedy') {
-			handleGreedyBestFirstAlgo();
-		}
+		setState((prevState) => ({ ...prevState, usedPathAlgo: algo }));
 	};
 
 	const handleAnimateMazeAlgoChange = (e) => {
 		const algo = e.target.value;
 		if (!algo) return;
 
-		if (algo === 'recursive-horizontal') {
-			handleRecursiveMazeAlgo('horizontal');
-		} else if (algo === 'recursive-vertical') {
-			handleRecursiveMazeAlgo('vertical');
-		} else if (algo === 'eller') {
-			handleEllerAlgo();
-		} else if (algo === 'prims') {
-			handlePrimsAlgo();
-		} else if (algo === 'kruskals') {
-			handleKruskalsAlgo();
-		} else if (algo === 'sidewinder') {
-			handleSidewinderAlgo();
-		}
+		const handlers = {
+			'recursive-horizontal': () => handleRecursiveMazeAlgo('horizontal'),
+			'recursive-vertical': () => handleRecursiveMazeAlgo('vertical'),
+			[MAZE_ALGORITHMS.eller]: handleEllerAlgo,
+			[MAZE_ALGORITHMS.prims]: handlePrimsAlgo,
+			[MAZE_ALGORITHMS.kruskals]: handleKruskalsAlgo,
+			[MAZE_ALGORITHMS.sidewinder]: handleSidewinderAlgo,
+		};
+
+		const handler = handlers[algo];
+		if (handler) handler();
 
 		setState((prevState) => ({ ...prevState, usedMazeAlgo: algo }));
 	};

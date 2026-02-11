@@ -15,12 +15,10 @@ export const Node = ({
 	const extraClassName = isFinish ? 'node-finish' : isStart ? 'node-start' : '';
 
 	const handlePointerDown = (e) => {
-		e.preventDefault();
 		onMouseDown(row, col);
 	};
 
 	const handlePointerEnter = (e) => {
-		e.preventDefault();
 		onMouseEnter(row, col);
 	};
 

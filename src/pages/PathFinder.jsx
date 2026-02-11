@@ -1,11 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Flex, useBreakpointValue } from '@chakra-ui/react';
+import {
+	Alert,
+	AlertIcon,
+	Center,
+	Flex,
+	useBreakpointValue,
+} from '@chakra-ui/react';
 import { getInitialGrid } from '../utils/path-finding-utils';
 import '../styles/path-finder.css';
 
 import { Header } from '../components/Header';
 import { ControlPanel } from '../components/ControlPanel';
-import { ActionBar } from '../components/ActionBar';
 import { Grid } from '../components/Grid';
 
 import { useAnimationEngine } from '../hooks/useAnimationEngine';
@@ -42,7 +47,7 @@ const getInitialState = () => {
 		isAnimating: false,
 		isPathAnimationFinished: false,
 		isMazeAnimationFinished: false,
-		usedPathAlgo: 'djikstra',
+		usedPathAlgo: '',
 		usedMazeAlgo: '',
 		numRows,
 		numColumns,
@@ -139,26 +144,16 @@ const PathFindingVisualizer = () => {
 					}))
 				}
 				usedPathAlgo={state.usedPathAlgo}
-				onPathAlgoChange={(e) => {
-					if (!e.target.value) return;
-					setState((prevState) => ({
-						...prevState,
-						usedPathAlgo: e.target.value,
-					}));
-				}}
+				onPathAlgoChange={algorithmHandlers.handleAnimatePathAlgoChange}
 				usedMazeAlgo={state.usedMazeAlgo}
 				onMazeAlgoChange={algorithmHandlers.handleAnimateMazeAlgoChange}
 				isPencil={isPencil}
 				onPencilChange={setIsPencil}
 				accordionIndex={accord}
 				onAccordionChange={setAccord}
-			/>
-			<ActionBar
-				isAnimating={state.isAnimating}
-				usedPathAlgo={state.usedPathAlgo}
-				onVisualize={algorithmHandlers.handleAnimatePathAlgoChange}
 				onReset={() => setState({ ...getInitialState() })}
 			/>
+
 			<Grid
 				grid={state.grid}
 				isAnimating={state.isAnimating}
@@ -167,7 +162,20 @@ const PathFindingVisualizer = () => {
 				onMouseEnter={gridInteraction.handleMouseEnter}
 				onMouseUp={gridInteraction.handleMouseUp}
 			/>
-			<Flex justify="center" wrap="wrap" mx="auto" mt={8}>
+
+			<Center my={4} mx={6}>
+				<Alert
+					width="max-content"
+					rounded={5}
+					py={2}
+					status={!state.isAnimating ? 'info' : 'warning'}>
+					<AlertIcon />
+					{!state.isAnimating
+						? 'Draw walls using pencil or chose maze algo for auto generation and choose a path algo!'
+						: 'Please wait for the algorithm animation to finish!'}
+				</Alert>
+			</Center>
+			<Flex justify="center" wrap="wrap" mx="auto">
 				<LegendItem title="Unvisited" className="node" />
 				<LegendItem title="Visited" className="node node-visited" />
 				<LegendItem title="Wall" className="node node-wall" />

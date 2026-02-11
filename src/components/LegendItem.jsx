@@ -10,10 +10,10 @@ export const LegendItem = ({ title, className }) => {
 			border="1px solid"
 			borderColor="blue.200"
 			mb={2}
-			direction="column"
+			direction="row"
 			alignItems="center">
 			<Text>{title}</Text>
-			<Flex className={className}></Flex>
+			<Flex className={className} ml={2} borderRadius={4}></Flex>
 		</Flex>
 	);
 };
