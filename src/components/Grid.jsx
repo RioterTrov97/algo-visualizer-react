@@ -9,9 +9,21 @@ export const Grid = ({
 	onMouseDown,
 	onMouseEnter,
 	onMouseUp,
+	mouseIsPressed,
 }) => {
+	const handlePointerMove = (e) => {
+		if (!mouseIsPressed) return;
+
+		const target = document.elementFromPoint(e.clientX, e.clientY);
+		if (target && target.dataset.row && target.dataset.col) {
+			const row = parseInt(target.dataset.row);
+			const col = parseInt(target.dataset.col);
+			onMouseEnter(row, col);
+		}
+	};
+
 	return (
-		<Flex direction="column" mx="auto">
+		<Flex direction="column" mx="auto" onPointerMove={handlePointerMove}>
 			{grid.map((row, rowIdx) => {
 				return (
 					<div

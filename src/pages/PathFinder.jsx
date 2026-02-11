@@ -158,6 +158,7 @@ const PathFindingVisualizer = () => {
 				grid={state.grid}
 				isAnimating={state.isAnimating}
 				isPencil={isPencil}
+				mouseIsPressed={state.mouseIsPressed}
 				onMouseDown={gridInteraction.handleMouseDown}
 				onMouseEnter={gridInteraction.handleMouseEnter}
 				onMouseUp={gridInteraction.handleMouseUp}

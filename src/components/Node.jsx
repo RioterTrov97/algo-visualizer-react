@@ -15,6 +15,7 @@ export const Node = ({
 	const extraClassName = isFinish ? 'node-finish' : isStart ? 'node-start' : '';
 
 	const handlePointerDown = (e) => {
+		e.preventDefault();
 		onMouseDown(row, col);
 	};
 
@@ -27,12 +28,11 @@ export const Node = ({
 			key={`node-${row}-${col}`}
 			className={`${className} ${extraClassName}`}
 			data-direction={direction}
+			data-row={row}
+			data-col={col}
 			onPointerDown={handlePointerDown}
 			onPointerEnter={handlePointerEnter}
 			onPointerUp={onMouseUp}
-			onTouchStart={handlePointerDown}
-			onTouchMove={handlePointerEnter}
-			onTouchEnd={onMouseUp}
 			style={{ touchAction: 'none' }}
 		/>
 	);

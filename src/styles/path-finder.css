@@ -1,5 +1,9 @@
 .grid-row {
 	display: flex;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
 }
 
 .grid-pencil {
