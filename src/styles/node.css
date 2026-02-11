@@ -5,11 +5,34 @@
 }
 
 .node-finish {
-	background-color: rgb(255, 0, 0) !important;
+	background-color: rgb(0, 0, 0, 0.8) !important;
+	position: relative;
+	z-index: 2;
+}
+
+.node-finish::after {
+	content: '🏠' !important;
+	font-size: 20px !important;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) !important;
+	z-index: 10;
 }
 
 .node-start {
-	background-color: rgb(0, 177, 0) !important;
+	background-color: rgb(0, 0, 0, 0.8) !important;
+	position: relative;
+}
+
+.node-start::after {
+	content: '🚶' !important;
+	font-size: 20px !important;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scaleX(-1) !important;
+	z-index: 10;
 }
 
 .node-visited {
@@ -50,29 +73,45 @@
 }
 
 .node-shortest-path {
-	animation-name: shortestPath;
-	animation-duration: 1.5s;
-	animation-timing-function: ease-out;
-	animation-delay: 0;
-	animation-direction: alternate;
-	animation-iteration-count: 1;
-	animation-fill-mode: forwards;
-	animation-play-state: running;
+	background-color: rgb(132, 217, 229);
+	position: relative;
 }
 
-@keyframes shortestPath {
+.node-shortest-path::after {
+	content: '👣';
+	font-size: 16px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	animation: footstepAppear 0.5s ease-in-out;
+	z-index: 5;
+}
+
+/* Direction-based rotations */
+.node-shortest-path[data-direction='right']::after {
+	transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.node-shortest-path[data-direction='down']::after {
+	transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.node-shortest-path[data-direction='left']::after {
+	transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.node-shortest-path[data-direction='up']::after {
+	transform: translate(-50%, -50%) rotate(0deg);
+}
+
+@keyframes footstepAppear {
 	0% {
-		transform: scale(1);
-		background-color: rgb(0, 119, 255);
+		opacity: 0;
+		scale: 0;
 	}
-
-	50% {
-		transform: scale(1);
-		background-color: rgb(0, 4, 255);
-	}
-
 	100% {
-		transform: scale(1);
-		background-color: rgb(153, 0, 255);
+		opacity: 1;
+		scale: 1;
 	}
 }

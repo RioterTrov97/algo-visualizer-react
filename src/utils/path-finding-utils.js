@@ -27,8 +27,15 @@ export const createNode = (col, row, startNode, finishNode) => {
 };
 
 export const getNewGridWithWallToggled = (grid, row, col, isDrawing) => {
+	const node = grid[row][col];
+
+	// Don't toggle start or finish nodes
+	if (node.isStart || node.isFinish) return grid;
+
+	// Only update if the state is actually changing
+	if (node.isWall === isDrawing) return grid;
+
 	const newGrid = grid.slice();
-	const node = newGrid[row][col];
 	const newNode = {
 		...node,
 		isWall: isDrawing,
@@ -46,4 +53,25 @@ export const changeClassName = (grid, row, col, className) => {
 	};
 	grid[row][col] = newNode;
 	return grid;
+};
+
+// Reset visited nodes and path visualization while preserving walls
+export const resetGridForNewPathfinding = (grid) => {
+	const newGrid = grid.map((row) =>
+		row.map((node) => ({
+			...node,
+			distance: Infinity,
+			isVisited: false,
+			previousNode: null,
+			// Keep the wall status and update className based on walls
+			className: node.isWall
+				? 'node node-wall'
+				: node.isStart
+					? 'node node-start'
+					: node.isFinish
+						? 'node node-finish'
+						: 'node',
+		})),
+	);
+	return newGrid;
 };

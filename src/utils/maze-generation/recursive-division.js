@@ -6,23 +6,23 @@ export const recursiveDivisionMaze = (
 	colEnd,
 	surroundingWalls,
 	wallsToAnimate,
-	orientation
+	orientation,
 ) => {
 	if (rowEnd < rowStart || colEnd < colStart) {
 		return;
 	}
 
-	const gridWidth = grid.length;
-	const gridHeight = grid[0].length;
+	const gridHeight = grid.length;
+	const gridWidth = grid[0].length;
 
 	if (!surroundingWalls) {
-		for (let row = 0; row < gridWidth; row++) {
-			for (let col = 0; col < gridHeight; col++) {
+		for (let row = 0; row < gridHeight; row++) {
+			for (let col = 0; col < gridWidth; col++) {
 				if (
 					row === 0 ||
 					col === 0 ||
-					row === gridWidth - 1 ||
-					col === gridHeight - 1
+					row === gridHeight - 1 ||
+					col === gridWidth - 1
 				) {
 					wallsToAnimate.push(grid[row][col]);
 				}
@@ -48,8 +48,8 @@ export const recursiveDivisionMaze = (
 		let currentRow = possibleRows[randomRowIndex];
 		let currentColumn = possibleCols[randomColIndex];
 
-		for (let row = 0; row < gridWidth; row++) {
-			for (let col = 0; col < gridHeight; col++) {
+		for (let row = 0; row < gridHeight; row++) {
+			for (let col = 0; col < gridWidth; col++) {
 				if (
 					row === currentRow &&
 					col !== currentColumn &&
@@ -72,7 +72,7 @@ export const recursiveDivisionMaze = (
 			colEnd,
 			surroundingWalls,
 			wallsToAnimate,
-			currentRow - 2 - rowStart > colEnd - colStart ? orientation : 'vertical'
+			currentRow - 2 - rowStart > colEnd - colStart ? 'horizontal' : 'vertical',
 		);
 		recursiveDivisionMaze(
 			grid,
@@ -82,7 +82,7 @@ export const recursiveDivisionMaze = (
 			colEnd,
 			surroundingWalls,
 			wallsToAnimate,
-			rowEnd - (currentRow + 2) > colEnd - colStart ? orientation : 'vertical'
+			rowEnd - (currentRow + 2) > colEnd - colStart ? 'horizontal' : 'vertical',
 		);
 	} else {
 		//finding all possible rows and columns
@@ -101,8 +101,8 @@ export const recursiveDivisionMaze = (
 		let currentRow = possibleRows[randomRowIndex];
 		let currentColumn = possibleCols[randomColIndex];
 
-		for (let row = 0; row < gridWidth; row++) {
-			for (let col = 0; col < gridHeight; col++) {
+		for (let row = 0; row < gridHeight; row++) {
+			for (let col = 0; col < gridWidth; col++) {
 				if (
 					col === currentColumn &&
 					row !== currentRow &&
@@ -125,7 +125,9 @@ export const recursiveDivisionMaze = (
 			currentColumn - 2,
 			surroundingWalls,
 			wallsToAnimate,
-			currentRow - 2 - rowStart > colEnd - colStart ? 'horizontal' : orientation
+			rowEnd - rowStart > currentColumn - 2 - colStart
+				? 'horizontal'
+				: 'vertical',
 		);
 
 		recursiveDivisionMaze(
@@ -136,7 +138,9 @@ export const recursiveDivisionMaze = (
 			colEnd,
 			surroundingWalls,
 			wallsToAnimate,
-			rowEnd - (currentRow + 2) > colEnd - colStart ? 'horizontal' : orientation
+			rowEnd - rowStart > colEnd - (currentColumn + 2)
+				? 'horizontal'
+				: 'vertical',
 		);
 	}
 
